@@ -27,4 +27,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o http-proxy
 EXPOSE 8080
 
 # Run
-CMD ["/http-proxy"]
+CMD ["./http-proxy"]
