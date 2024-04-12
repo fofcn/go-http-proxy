@@ -2,7 +2,7 @@ server:
   addr: :8080
 
 downstream:
-  url: https://www.google.com
+  url: https://www.baidu.com
 
 whitelist:
   - 192.168.1.1

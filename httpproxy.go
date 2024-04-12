@@ -55,19 +55,21 @@ func ipInWhitelist(ipStr string, whitelist []string) bool {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	println("Enter handler")
+	log.Printf("Enter handler\n")
 	ipStr := r.Header.Get("X-FORWARDED-FOR")
 	if ipStr == "" {
 		ipStr = r.RemoteAddr
 	}
-	println("ip:", ipStr)
+	log.Printf("ip: %s\n", ipStr)
 
 	if ipInWhitelist(ipStr, conf.Whitelist) {
 		serveReverseProxy(conf.Downstream.URL, w, r)
+		log.Printf("ip in whitelist, exit handler, ipstr: %s\n", ipStr)
 		return
 	}
 
 	http.NotFound(w, r)
+	log.Printf("Exit handler\n")
 }
 
 func serveReverseProxy(target string, w http.ResponseWriter, r *http.Request) {
@@ -84,6 +86,7 @@ func serveReverseProxy(target string, w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.SetOutput(os.Stdout)
 	// Load configuration
 	source, err := os.ReadFile("config.yaml")
 	if err != nil {
@@ -95,6 +98,7 @@ func main() {
 		log.Panic(err)
 	}
 
+	log.Printf("start http server , listen on %s\n", conf.Server.Addr)
 	http.HandleFunc("/", handler)
 	err = http.ListenAndServe(conf.Server.Addr, nil)
 	if err != nil {
