@@ -49,8 +49,8 @@
 - 构建并运行项目
 
   ```shell
-  go build
-  ./main
+  go build http-proxy
+  ./http-proxy
   ```
 
 - 服务器将在指定的地址启动。尝试从列在白名单的客户端访问该地址，以验证请求是否被正确转发。

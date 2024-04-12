@@ -50,8 +50,8 @@ If the client's IP address does not appear in the whitelist or if the `X-Forward
 - Build and run the project
 
   ```shell
-  go build
-  ./main
+  go build http-proxy
+  ./http-proxy
   ```
 
 - The server will start at the specified address. Try to visit the address from a client with whitelisted IP to verify that requests are forwarded properly.
