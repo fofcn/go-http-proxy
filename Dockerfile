@@ -2,6 +2,9 @@
 
 FROM golang:1.22.1
 
+# Set Go proxy if you are in China
+ENV GOPROXY=https://goproxy.cn,direct
+
 # Set destination for COPY
 WORKDIR /app
 
