@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -58,7 +59,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Enter handler\n")
 	ipStr := r.Header.Get("X-FORWARDED-FOR")
 	if ipStr == "" {
-		ipStr = r.RemoteAddr
+		ipStr = strings.Split(r.RemoteAddr, ":")[0]
+	} else {
+		ipStr = strings.TrimSpace(strings.Split(ipStr, ",")[0])
 	}
 	log.Printf("ip: %s\n", ipStr)
 
