@@ -1,0 +1,103 @@
+package main
+
+import (
+	"log"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"os"
+
+	"gopkg.in/yaml.v2"
+)
+
+type Downstream struct {
+	URL string `yaml:"url"`
+}
+
+type Server struct {
+	Addr string `yaml:"addr"`
+}
+
+type Conf struct {
+	Server     Server     `yaml:"server"`
+	Downstream Downstream `yaml:"downstream"`
+	Whitelist  []string   `yaml:"whitelist"`
+}
+
+var conf = Conf{}
+
+func transformToCIDR(ipStr string) string {
+	if ip := net.ParseIP(ipStr); ip != nil {
+		if ip.To4() != nil {
+			// This is IPv4
+			return ip.String() + "/32"
+		} else {
+			// This is IPv6
+			return ip.String() + "/128"
+		}
+	}
+	return ipStr
+}
+
+func ipInWhitelist(ipStr string, whitelist []string) bool {
+	ip := net.ParseIP(ipStr)
+	for _, cidr := range whitelist {
+		_, ipNet, err := net.ParseCIDR(transformToCIDR(cidr))
+		if err != nil {
+			return false
+		}
+		if ipNet.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	println("Enter handler")
+	ipStr := r.Header.Get("X-FORWARDED-FOR")
+	if ipStr == "" {
+		ipStr = r.RemoteAddr
+	}
+	println("ip:", ipStr)
+
+	if ipInWhitelist(ipStr, conf.Whitelist) {
+		serveReverseProxy(conf.Downstream.URL, w, r)
+		return
+	}
+
+	http.NotFound(w, r)
+}
+
+func serveReverseProxy(target string, w http.ResponseWriter, r *http.Request) {
+	url, _ := url.Parse(target)
+
+	proxy := httputil.NewSingleHostReverseProxy(url)
+
+	r.URL.Host = url.Host
+	r.URL.Scheme = url.Scheme
+	r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
+	r.Host = url.Host
+
+	proxy.ServeHTTP(w, r)
+}
+
+func main() {
+	// Load configuration
+	source, err := os.ReadFile("config.yaml")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = yaml.Unmarshal(source, &conf)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	http.HandleFunc("/", handler)
+	err = http.ListenAndServe(conf.Server.Addr, nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+}

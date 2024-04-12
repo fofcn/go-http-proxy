@@ -1,0 +1,11 @@
+server:
+  addr: :8080
+
+downstream:
+  url: https://www.google.com
+
+whitelist:
+  - 192.168.1.1
+  - 192.168.1.2
+  - 10.22.81.0/24
+  - ::1
