@@ -1,4 +1,5 @@
 # Simple HTTP Proxy
+[中文介绍](./README_CN.md)
 
 This project provides a simple HTTP proxy sever capable of forwarding requests based on the client's IP address. If the client's IP is in the whitelist, the proxy server will forward the requests to the downstream server. Otherwise, it returns a 404 error.
 
